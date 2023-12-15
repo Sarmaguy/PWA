@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speech Synthesizer Demo</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    textarea,
+    select,
+    input,
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+
+    input[type="range"] {
+      width: calc(100% - 22px);
+      margin: 5px 0;
+    }
+
+    button {
+      background-color: #4caf50;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      border-radius: 3px;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+<form>
+  <label for="text-input">Enter Text:</label>
+  <textarea id="text-input" class="txt" rows="4"></textarea>
+
+  <label for="voice-select">Select Voice:</label>
+  <select id="voice-select"></select>
+
+  <label for="pitch">Pitch:</label>
+  <input type="range" id="pitch" min="0" max="2" step="0.1" value="1" />
+  <span class="pitch-value">1</span>
+
+  <label for="rate">Rate:</label>
+  <input type="range" id="rate" min="0.1" max="10" step="0.1" value="1" />
+  <span class="rate-value">1</span>
+
+  <button type="submit">Speak</button>
+</form>
+
+<script>
+  const synth = window.speechSynthesis;
+
+  const inputForm = document.querySelector("form");
+  const inputTxt = document.querySelector("#text-input");
+  const voiceSelect = document.querySelector("#voice-select");
+  const pitch = document.querySelector("#pitch");
+  const pitchValue = document.querySelector(".pitch-value");
+  const rate = document.querySelector("#rate");
+  const rateValue = document.querySelector(".rate-value");
+
+  let voices = [];
+
+  function populateVoiceList() {
+    voices = synth.getVoices();
+
+    for (let i = 0; i < voices.length; i++) {
+      const option = document.createElement("option");
+      option.textContent = `${voices[i].name} (${voices[i].lang})`;
+
+      if (voices[i].default) {
+        option.textContent += " — DEFAULT";
+      }
+
+      option.setAttribute("data-lang", voices[i].lang);
+      option.setAttribute("data-name", voices[i].name);
+      voiceSelect.appendChild(option);
+    }
+  }
+
+  populateVoiceList();
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = populateVoiceList;
+  }
+
+  inputForm.onsubmit = (event) => {
+    event.preventDefault();
+
+    const utterThis = new SpeechSynthesisUtterance(inputTxt.value);
+    const selectedOption =
+      voiceSelect.selectedOptions[0].getAttribute("data-name");
+    for (let i = 0; i < voices.length; i++) {
+      if (voices[i].name === selectedOption) {
+        utterThis.voice = voices[i];
+      }
+    }
+    utterThis.pitch = pitch.value;
+    utterThis.rate = rate.value;
+    synth.speak(utterThis);
+
+    inputTxt.blur();
+  };
+
+  // Update pitch and rate values
+  pitch.addEventListener("input", () => {
+    pitchValue.textContent = pitch.value;
+  });
+
+  rate.addEventListener("input", () => {
+    rateValue.textContent = rate.value;
+  });
+</script>
+
+</body>
+</html>
